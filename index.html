@@ -1,0 +1,789 @@
+<html>
+<head>
+	<title>BlockBuster</title>
+	<link href='https://fonts.googleapis.com/css?family=Play' rel='stylesheet' type='text/css'>
+
+	<style type="text/css">
+		body, html {
+			font-family: 'Play';
+			margin: 0;
+			padding: 0;
+			/*background: #333;*/
+			/*color: #ccc;*/
+		}
+
+		h1 {
+			text-align: center;
+		}
+
+		#canvas {
+			background: #ccc;
+			display: block;
+			margin: 0 auto;
+			font-family: 'Play';
+			display: inline-block;
+			float: left;
+			/*box-shadow: 2px 2px 25px 10px #369;*/
+		}
+
+		#controls {
+			float: left;
+			display: inline-block;
+			width: 20%;
+			background: #eee;
+			text-align: center;
+			margin: 0;
+		}
+
+		#stats {
+			width:20%;
+			background: #ccc;
+			display: inline-block;
+			float: left;
+			display: inline-block;
+		}
+
+		h1 {
+			margin:0;
+			/*color: #fff;*/
+			/*text-shadow: 2px 2px 25px 10px #c33;			*/
+		}
+
+		#info {
+			/*background: #ccc;*/
+			/*box-shadow: 2px 2px 25px 20px #c33;*/
+			width: 500px;
+			display: block;
+			margin: 0 auto;
+			text-align: center;
+			margin-top: 80px;
+			border-right: 20px solid #ccc;
+			border-left: 20px solid #ccc;
+			/*border-bottom: 50px solid #ccc;
+			border-top: 50px solid #ccc;*/
+			padding:0 50px 20px;
+		}
+
+		#info p {
+			font-size: 20px;
+		}
+
+		#you {
+			height: 30px;
+			width: 30px;
+			background: #369;
+			border-radius: 100%;
+			margin: 0 auto;
+		}
+
+		.exampleBlock {
+			width: 50px;
+			height: 20px;
+			display: inline-block;
+			margin:0 5px;
+		}
+
+		#redExampleBlock {
+			background: #c33;
+		}
+
+		#greenExampleBlock {
+			background: #396;
+		}
+
+		#blueExampleBlock {
+			background: #369;
+		}
+
+		#bigExampleBlock {
+			background: orange;
+			width: 500px;
+			height: 50px;
+			display: inline-block;
+		}
+
+		.blue {
+			color: #369;
+		}
+
+		.red {
+			color: #c33;
+		}
+
+		.green {
+			color: #396;
+		}
+
+		.orange {
+			color: orange;
+		}
+
+		#info button {
+			margin-top: 20px;
+			width: 100px;
+			padding: 10px 20px;
+			border: none;
+			background: #369;
+			color:#fff;
+			font-size: 20px;
+			border-radius: 2px;
+			/*border: 2px solid #036;*/
+			-webkit-transition: background 0.5s; /* Safari */
+    		transition: background 0.5s;
+		}
+
+		#info button:hover {
+			background: #036;
+		}
+
+	</style>
+
+	<script type="text/javascript">
+
+		var game = {
+			paused : false,
+
+			clearPlayArea : function() {
+				context.clearRect(0, 0, canvas.width, canvas.height);
+			},
+
+			setText : function(colour) {
+				context.font = "30px Play";
+				context.fillStyle = colour;
+			},
+
+			drawScore : function() {
+				this.setText("#000");
+				context.fillText(player.stats.score, 10, 30);
+			},
+
+			drawAmmo : function() {
+				this.setText("#c33");
+				context.fillText(player.stats.ammo, canvas.width - context.measureText(player.stats.ammo).width - 10, 30)
+			},
+
+			drawLives : function() {
+				for(var i = 0; i < player.stats.lives; ++i) {
+					context.beginPath();
+					context.arc(canvas.width/2 + (i*25) + 5, 20, 10, 0, 2*Math.PI);
+					context.closePath();
+					context.fillStyle = "#c33";
+					context.fill();
+				}
+			},
+
+			drawStats : function() {
+				this.drawScore();
+				this.drawLives();
+				this.drawAmmo();
+			},
+
+			togglePause : function() {
+				this.paused = this.paused? false: true;
+				if(!this.paused)
+					requestAnimationFrame(animate);
+			},
+
+			drawGameOverStats : function() {
+				this.clearPlayArea();
+				this.drawStats();
+				this.setText("#000");
+				context.fillText("Game Over.", canvas.width/2 - context.measureText("Game Over.").width/2, canvas.height/2);
+				context.fillText("Score : " + player.stats.score, canvas.width/2 - context.measureText("Score : " + player.stats.score).width/2, canvas.height/2 + context.measureText("Score : " + player.stats.score).height + 10);
+				// setTimeout(context.fillText("Score : " + player.stats.score, canvas.width/2 - context.measureText("Score : " + player.stats.score).width/2, canvas.height/2 + context.measureText("Score : " + player.stats.score).height + 10), 500);
+
+			},
+
+			over : function() {
+				this.togglePause();
+				this.clearPlayArea();
+				this.drawGameOverStats();
+			},
+
+			reset : function() {
+				this.togglePause();
+				cancelAnimationFrame(startGame);
+				start();
+			}
+		};
+
+		var player = {
+			currentColour : 0,
+			colourSet : ["#369", "#c33", "#396"],
+			radius : 20,
+			speed_x : 15,
+			speed_y : 15,
+			bigHits : 0,
+			stats : {
+				lives : 3,
+				score : 0,
+				ammo : 10,
+				blocksHit : 0,
+				blocksMissed : 0,
+				blueHit : 0,
+				redHit : 0,
+				greenHit : 0,
+				orangeHit : 0,
+				whiteHit : 0
+			},
+			
+			setColourByName : function(colour) {
+				this.colour = colour;
+			},
+
+			setColourByIndex : function(index) {
+				this.currentColour = index;
+				this.colour = this.colourSet[index];
+			},
+
+			setRadius : function(radius) {
+				this.radius = radius;
+			},
+
+			setSpeedX : function(speed_x) {
+				this.speed_x = speed_x;
+			},
+
+			setSpeedY : function(speed_y) {
+				this.speed_y = speed_y;
+			},
+
+			setPosition : function(x, y) {
+				this.x = x;
+				this.y = y;
+			},
+
+			draw : function() {
+				context.clearRect(0, 0, canvas.width, canvas.height);
+				context.beginPath();
+				context.arc(this.x, this.y, this.radius, 0, 2*Math.PI);
+				context.closePath();
+				context.fillStyle = this.colour;
+				context.fill();
+			},
+
+			reset : function() {
+				this.setPosition(canvas.width/2, canvas.height - this.radius);
+				this.draw();
+				this.setSpeedX(10);
+				this.setSpeedY(10);
+				this.setColourByName("#369");
+			},
+
+			move : function(x, y) {
+				this.x += x;
+				this.y += y;
+
+				this.draw();
+			},
+
+			shoot : function() {
+				if(this.stats.ammo > 0) {
+					bullets.push(new Bullet());
+					player.updateStats.ammoDown();
+				}
+
+			},
+
+			control : function(keyCode) {
+				switch(keyCode) {
+					//left arrow key - move left
+					case 37:
+						if(!game.paused && (this.x - this.radius) > 0)
+							this.move(-1 * this.speed_x, 0);
+						break;
+					//up arrow key(38) or space bar(32) - shoot
+					case 32:
+					case 38:
+						// this.move(0, -1 * this.speed_y);
+						if(!game.paused)
+							this.shoot();
+						break;
+					//right arrow key - move right
+					case 39:
+						if(!game.paused && (this.x + this.radius) < canvas.width)
+							this.move(this.speed_x, 0);
+						break;
+					//down
+					case 40:
+						// this.move(0, this.speed_y);
+						break;
+					//c - change colour
+					case 67:
+						// Math.floor(Math.random()*(max-min+1)+min);
+						// this.colour = this.colourSet[Math.floor(Math.random()*(3))];
+						this.currentColour++;
+						this.currentColour %= this.colourSet.length;
+						this.setColourByIndex(this.currentColour);
+						break;
+
+					case 80:
+						game.togglePause();
+						break;
+					//r for reset				
+					case 82:
+						if(!game.paused)
+							this.reset();
+						else
+							window.location.reload();
+						break;
+				}				
+			},
+			
+
+			crashWith : function(obstacle) {
+				//compare obstacle borders with my borders
+				
+				var	obstacleLeft = obstacle.x,
+					obstacleRight = obstacle.x + obstacle.width,
+					obstacleTop = obstacle.y,
+					obstacleBottom = obstacle.y + obstacle.height;
+
+				var myLeft = this.x - this.radius,
+					myRight = this.x + this.radius,
+					myTop = this.y - this.radius,
+					myBottom = this.y + this.radius;
+
+				var crash = true;
+				if(	(myBottom < obstacleTop) || 
+					(myTop > obstacleBottom) ||
+					(myRight < obstacleLeft) ||
+					(myLeft > obstacleRight))
+					crash = false;
+
+				return crash;
+			},
+
+			kill : function() {
+				this.setColourByName("#000");
+				this.setSpeedX(0);
+				this.setSpeedY(0);				
+				// document.getElementById("lives").innerHTML = this.stats.lives;
+				this.reset();
+			},
+
+			updateStats : {
+				blockHit : function(obstacle) {
+					player.stats.blocksHit++;
+					// switch(obstacle) {
+					// 	case 1:
+					// 		this.stats.blueHit++;
+					// 		break;
+					// 	case 2:
+					// 		this.stats.redHit++;
+					// 		break;
+					// 	case 3:
+					// 		this.stats.greenHit++;
+					// 		break;
+					// }
+				},
+
+				blockMissed : function() {
+					this.stats.blocksMissed++;
+				},
+
+				scoreUp2x : function() {
+					player.stats.score += 2 * (new Obstacle).scoreValue;
+				},
+
+				scoreUp : function(obstacle) {
+					player.stats.score += obstacle.scoreValue;
+				},
+
+				replenishAmmo : function() {
+					player.stats.ammo = 10;
+				},
+
+				ammoUp : function() {
+					++player.stats.ammo;
+				},
+
+				ammoDown : function() {
+					--player.stats.ammo;
+				},
+
+				lifeDown : function() {
+					--player.stats.lives;
+					if(player.stats.lives == -1) {
+						game.over();
+					}
+				}
+			}
+
+		};
+
+		function Bullet() {
+			this.colour = player.colour;
+			this.width = 3;
+			this.height = 3;
+			this.speed = -5;
+			this.x = player.x - 1;
+			this.y = player.y - player.radius;
+			this.draw = function() {
+				context.fillStyle = this.colour;
+				context.fillRect(this.x, this.y, this.width, this.height);
+			};
+
+			this.hits = function(obstacle) {
+				//compare obstacle borders with my borders
+				
+				var	obstacleLeft = obstacle.x,
+					obstacleRight = obstacle.x + obstacle.width,
+					obstacleTop = obstacle.y,
+					obstacleBottom = obstacle.y + obstacle.height;
+
+				var myLeft = this.x,
+					myRight = this.x + this.width,
+					myTop = this.y,
+					myBottom = this.y + this.height;
+
+				var hit = true;
+				if(	(myBottom < obstacleTop) || 
+					(myTop > obstacleBottom) ||
+					(myRight < obstacleLeft) ||
+					(myLeft > obstacleRight))
+					hit = false;
+
+				return hit;
+			}
+		}
+
+		function Obstacle(x, y, colour) {
+			this.colour = colour;
+			this.colourSet = ["#369", "#c33", "#396"];
+			this.width = 50;
+			this.height = 20;
+			this.x = x;
+			this.y = y;
+			this.scoreValue = 10;
+
+			this.setHeight = function(height) {
+				this.height = height;
+			};
+
+			this.setWidth = function(width) {
+				this.width = width;
+			};
+
+			this.setColour = function(colour) {
+				this.colour = colour;
+			};
+
+			this.setPosition = function(x, y) {
+				this.x = x;
+				this.y = y;
+			};
+
+			this.draw = function() {
+				// context.clearRect(0, 0, canvas.width, canvas.height);
+				context.fillStyle = this.colour;
+				context.fillRect(this.x, this.y, this.width, this.height);
+			};
+
+		}
+
+		function BigSpecialObstacle(y) {
+			this.colour = "orange";			
+			this.width = canvas.width;
+			this.height = 50;
+			this.x = 0;
+			this.y = y;
+			this.scoreValue = 50;
+
+			this.setHeight = function(height) {
+				this.height = height;
+			};
+
+			this.setWidth = function(width) {
+				this.width = width;
+			};
+
+			this.setColour = function(colour) {
+				this.colour = colour;
+			};
+
+			this.setPosition = function(x, y) {
+				this.x = x;
+				this.y = y;
+			};
+
+			this.draw = function() {
+				// context.clearRect(0, 0, canvas.width, canvas.height);
+				context.fillStyle = this.colour;
+				context.fillRect(this.x, this.y, this.width, this.height);
+			};
+
+		}
+
+		function SmallSpecialObstacle(x, y) {
+			this.colour = "white";		
+			this.width = 10;
+			this.height = 10;
+			this.x = x;
+			this.y = y;
+			this.scoreValue = 100;
+
+			this.setHeight = function(height) {
+				this.height = height;
+			};
+
+			this.setWidth = function(width) {
+				this.width = width;
+			};
+
+			this.setColour = function(colour) {
+				this.colour = colour;
+			};
+
+			this.setPosition = function(x, y) {
+				this.x = x;
+				this.y = y;
+			};
+
+			this.draw = function() {
+				// context.clearRect(0, 0, canvas.width, canvas.height);
+				context.fillStyle = this.colour;
+				context.fillRect(this.x, this.y, this.width, this.height);
+			};
+
+		}
+	</script>
+</head>
+<body>
+
+	<h1>BlockBuster</h1>
+
+	<div id="info">
+		<p>This is you.</p>
+		<div id="you"></div>
+		<p class="blue">Your objective is to shoot and destroy the falling blocks without getting hit by them.</p>
+		<div class="exampleBlock" id="blueExampleBlock"></div><div class="exampleBlock" id="redExampleBlock"></div><div class="exampleBlock" id="greenExampleBlock"></div>
+		<p class="red">Careful though, your ammunition is limited.</p>
+		<p>White blocks are small and hard to destroy.</p>
+		<p class="orange">Orange blocks are large and require 4 bullets to destroy.</p>
+		<!-- <div id="bigExampleBlock"></div> -->
+		<button onclick="readify()">PLAY</button>
+
+	</div>
+
+	<div id="controls">
+		<h2>Shoot</h2>
+		<img src="testGame/arrow-up-icon.png" height="50"><br>
+		<h2>Movement</h2>
+		<img src="testGame/arrow-left-icon.png" height="50">
+		<img src="testGame/arrow-right-icon.png" height="50"><br>
+		<h2>Pause/Resume</h2>
+		<img src="testGame/letter-p-icon.png" height="50"><br>
+		<h2>Reset</h2>
+		<img src="testGame/letter-r-icon.png" height="50"><br>
+		<h2>Change player colour</h2>
+		<img src="testGame/letter-c-icon.png" height="50"><br>
+	</div>
+
+	<!-- <div id="stats"></div> -->
+	<canvas id="canvas" width="800" height="600"></canvas>
+
+	<script type="text/javascript">
+
+		var canvas = document.getElementById("canvas");
+		var context = canvas.getContext("2d");
+		var obstacles = [];
+		var bigObstacles = [];
+		var smallObstacles = [];
+		var bullets = [];
+		var frameCount = 0;
+		game.paused = true;
+		intro();		
+		
+		function intro() {
+			canvas.style.display = "none";
+			document.getElementById("controls").style.display = "none";
+		}
+
+		function readify() {
+			document.getElementById("info").style.display = "none";
+			canvas.style.display = "block";
+			document.getElementById("controls").style.display = "block";
+			document.getElementById("controls").style.height = canvas.height;
+			// document.getElementById("stats").style.height = canvas.height;
+			start();
+		}
+
+		function start() {
+			game.clearPlayArea();
+			obstacles = [];
+		 	bigObstacles = [];
+		 	smallObstacles = [];
+		 	bullets = [];
+		 	frameCount = 0;
+		 	// game.togglePause();
+		 	game.paused = false;
+			player.reset();			
+			// document.getElementById("lives").innerHTML = player.stats.lives;
+
+			// var randomX = Math.floor(Math.random()*(canvas.width - obstacle.width +1));
+			// var randomY = Math.floor(Math.random()*(canvas.height - obstacle.height +1));
+			// obstacle.setPosition(randomX, randomY);
+			// obstacle.draw();
+			frameCount = 0;
+			var startGame = requestAnimationFrame(animate);
+		}
+
+		function animate() {			
+			
+			context.clearRect(0, 0, canvas.width, canvas.height);
+
+			player.draw();
+
+			frameCount++;
+
+			/*OBSTACLE CREATION*/
+			//don't create obstacles too often - only once in 120 frames
+			if((frameCount/120)%1 == 0 || obstacles.length == 0) {
+				// Math.floor(Math.random()*(max-min+1)+min);
+				var randomX = Math.floor(Math.random() * (canvas.width - (new Obstacle()).width +1));
+				var randomY = Math.floor(Math.random() * (canvas.height/2 - (new Obstacle()).height +1));
+				var randomColour = (new Obstacle()).colourSet[Math.floor(Math.random() * ((new Obstacle()).colourSet.length + 1))];
+				obstacles.push(new Obstacle(randomX, randomY, randomColour));
+			}
+
+			//create big obstacles once in 2000 frames
+			if((frameCount/2000)%1 == 0) {
+				var bigRandomY = Math.floor(Math.random() * (canvas.height/2 - (new BigSpecialObstacle()).height +1));
+				bigObstacles.push(new BigSpecialObstacle(bigRandomY));
+			}
+
+			//create small obstacles once in 600 frames
+			if((frameCount/600)%1 == 0 || obstacles.length == 0) {
+				// Math.floor(Math.random()*(max-min+1)+min);
+				var smallRandomX = Math.floor(Math.random() * (canvas.width - (new SmallSpecialObstacle()).width +1));
+				var smallRandomY = Math.floor(Math.random() * (canvas.height/2 - (new SmallSpecialObstacle()).height +1));
+				smallObstacles.push(new SmallSpecialObstacle(smallRandomX, smallRandomY));
+			}
+
+
+			/*ANIMATIONS AND COLLISIONS*/
+
+			for(i = 0; i < obstacles.length; ++i) {
+				if(player.crashWith(obstacles[i])) {
+					player.kill();
+					obstacles.splice(i, 1);
+					player.updateStats.lifeDown();
+					player.updateStats.replenishAmmo();
+				}
+				else {
+					obstacles[i].y += 1;
+					obstacles[i].draw();
+				}
+			}
+
+			for(i = 0; i < bigObstacles.length; ++i) {
+				if(player.crashWith(bigObstacles[i])) {
+					player.kill();
+					bigObstacles.splice(i, 1);
+					player.updateStats.lifeDown();
+					player.updateStats.replenishAmmo();
+					player.bigHits = 0;
+				}
+				else {
+					bigObstacles[i].y += 2;
+					bigObstacles[i].draw();
+				}
+			}
+
+			for(i = 0; i < smallObstacles.length; ++i) {
+				if(player.crashWith(smallObstacles[i])) {
+					player.kill();
+					smallObstacles.splice(i, 1);
+					player.updateStats.lifeDown();
+					player.updateStats.replenishAmmo();
+				}
+				else {
+					smallObstacles[i].y += 0.5;
+					smallObstacles[i].x += 0.5;
+					smallObstacles[i].draw();
+				}
+			}
+
+			var bulletUsed = false;
+			
+			for(i = 0; i < bullets.length; ++i) {
+
+				//check whether any bullet hits normal obstacle
+				for(var j = 0; j < obstacles.length; ++j) {
+					bulletUsed = false;
+					if(bullets[i].hits(obstacles[j])) {
+						player.updateStats.blockHit(1);
+						obstacles.splice(j, 1);
+						bulletUsed = true;
+						// if(bullets[i].colour == obstacles[j].colour) {
+						// 	player.updateStats.scoreUp2x();
+						// }
+						// else {
+							player.updateStats.scoreUp(new Obstacle());
+							player.updateStats.ammoUp();
+						// }
+					}	
+				}
+
+				for(var k = 0; k < bigObstacles.length; ++k) {					
+					if(bullets[i].hits(bigObstacles[k])) {						
+						bulletUsed = true;
+						player.bigHits++;
+						bigObstacles[k].height /= 2;
+					}					
+				}
+				
+				for(var l = 0; l < smallObstacles.length; ++l) {
+					if(bullets[i].hits(smallObstacles[l])) {
+						player.updateStats.blockHit(2);
+						smallObstacles.splice(l, 1);
+						bulletUsed = true;
+						
+						player.updateStats.scoreUp(new SmallSpecialObstacle());
+						player.updateStats.ammoUp();
+						
+					}	
+				}
+
+				//check whether any bullets are out of the screen
+				if(bullets[i].y < 0)
+					bulletUsed = true;
+
+				bullets[i].y -= 3;
+				bullets[i].draw();
+
+				if(bulletUsed == true)
+					bullets.splice(i, 1);
+			}
+
+			if(player.bigHits >= 4) {
+				player.updateStats.blockHit(3);
+				bigObstacles.splice(0, bigObstacles.length);
+				bulletUsed = true;
+				player.bigHits = 0;
+						// if(bullets[i].colour == obstacles[j].colour) {
+						// 	player.updateStats.scoreUp2x();
+						// }
+						// else {
+				player.updateStats.scoreUp(new BigSpecialObstacle());
+				player.updateStats.ammoUp();
+						// }
+			}
+
+			game.drawStats();
+			if(!game.paused)
+				requestAnimationFrame(animate);
+		};
+		
+
+		window.addEventListener('keydown', function(e) {
+			// alert(e.keyCode);
+			player.control(e.keyCode);
+		});
+
+
+	</script>
+</body>
+</html>
+
