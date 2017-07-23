@@ -226,7 +226,7 @@
 				orangeHit : 0,
 				whiteHit : 0
 			},
-			
+
 			setColourByName : function(colour) {
 				this.colour = colour;
 			},
@@ -320,20 +320,20 @@
 					case 80:
 						game.togglePause();
 						break;
-					//r for reset				
+					//r for reset
 					case 82:
 						if(!game.paused)
 							this.reset();
 						else
 							window.location.reload();
 						break;
-				}				
+				}
 			},
-			
+
 
 			crashWith : function(obstacle) {
 				//compare obstacle borders with my borders
-				
+
 				var	obstacleLeft = obstacle.x,
 					obstacleRight = obstacle.x + obstacle.width,
 					obstacleTop = obstacle.y,
@@ -345,7 +345,7 @@
 					myBottom = this.y + this.radius;
 
 				var crash = true;
-				if(	(myBottom < obstacleTop) || 
+				if(	(myBottom < obstacleTop) ||
 					(myTop > obstacleBottom) ||
 					(myRight < obstacleLeft) ||
 					(myLeft > obstacleRight))
@@ -357,7 +357,7 @@
 			kill : function() {
 				this.setColourByName("#000");
 				this.setSpeedX(0);
-				this.setSpeedY(0);				
+				this.setSpeedY(0);
 				// document.getElementById("lives").innerHTML = this.stats.lives;
 				this.reset();
 			},
@@ -426,7 +426,7 @@
 
 			this.hits = function(obstacle) {
 				//compare obstacle borders with my borders
-				
+
 				var	obstacleLeft = obstacle.x,
 					obstacleRight = obstacle.x + obstacle.width,
 					obstacleTop = obstacle.y,
@@ -438,7 +438,7 @@
 					myBottom = this.y + this.height;
 
 				var hit = true;
-				if(	(myBottom < obstacleTop) || 
+				if(	(myBottom < obstacleTop) ||
 					(myTop > obstacleBottom) ||
 					(myRight < obstacleLeft) ||
 					(myLeft > obstacleRight))
@@ -483,7 +483,7 @@
 		}
 
 		function BigSpecialObstacle(y) {
-			this.colour = "orange";			
+			this.colour = "orange";
 			this.width = canvas.width;
 			this.height = 50;
 			this.x = 0;
@@ -516,7 +516,7 @@
 		}
 
 		function SmallSpecialObstacle(x, y) {
-			this.colour = "white";		
+			this.colour = "white";
 			this.width = 10;
 			this.height = 10;
 			this.x = x;
@@ -568,16 +568,16 @@
 
 	<div id="controls">
 		<h2>Shoot</h2>
-		<img src="testGame/arrow-up-icon.png" height="50"><br>
+		<img src="images/arrow-up-icon.png" height="50"><br>
 		<h2>Movement</h2>
-		<img src="testGame/arrow-left-icon.png" height="50">
-		<img src="testGame/arrow-right-icon.png" height="50"><br>
+		<img src="images/arrow-left-icon.png" height="50">
+		<img src="images/arrow-right-icon.png" height="50"><br>
 		<h2>Pause/Resume</h2>
-		<img src="testGame/letter-p-icon.png" height="50"><br>
+		<img src="images/letter-p-icon.png" height="50"><br>
 		<h2>Reset</h2>
-		<img src="testGame/letter-r-icon.png" height="50"><br>
+		<img src="images/letter-r-icon.png" height="50"><br>
 		<h2>Change player colour</h2>
-		<img src="testGame/letter-c-icon.png" height="50"><br>
+		<img src="images/letter-c-icon.png" height="50"><br>
 	</div>
 
 	<!-- <div id="stats"></div> -->
@@ -593,8 +593,8 @@
 		var bullets = [];
 		var frameCount = 0;
 		game.paused = true;
-		intro();		
-		
+		intro();
+
 		function intro() {
 			canvas.style.display = "none";
 			document.getElementById("controls").style.display = "none";
@@ -618,7 +618,7 @@
 		 	frameCount = 0;
 		 	// game.togglePause();
 		 	game.paused = false;
-			player.reset();			
+			player.reset();
 			// document.getElementById("lives").innerHTML = player.stats.lives;
 
 			// var randomX = Math.floor(Math.random()*(canvas.width - obstacle.width +1));
@@ -629,8 +629,8 @@
 			var startGame = requestAnimationFrame(animate);
 		}
 
-		function animate() {			
-			
+		function animate() {
+
 			context.clearRect(0, 0, canvas.width, canvas.height);
 
 			player.draw();
@@ -706,7 +706,7 @@
 			}
 
 			var bulletUsed = false;
-			
+
 			for(i = 0; i < bullets.length; ++i) {
 
 				//check whether any bullet hits normal obstacle
@@ -723,27 +723,27 @@
 							player.updateStats.scoreUp(new Obstacle());
 							player.updateStats.ammoUp();
 						// }
-					}	
+					}
 				}
 
-				for(var k = 0; k < bigObstacles.length; ++k) {					
-					if(bullets[i].hits(bigObstacles[k])) {						
+				for(var k = 0; k < bigObstacles.length; ++k) {
+					if(bullets[i].hits(bigObstacles[k])) {
 						bulletUsed = true;
 						player.bigHits++;
 						bigObstacles[k].height /= 2;
-					}					
+					}
 				}
-				
+
 				for(var l = 0; l < smallObstacles.length; ++l) {
 					if(bullets[i].hits(smallObstacles[l])) {
 						player.updateStats.blockHit(2);
 						smallObstacles.splice(l, 1);
 						bulletUsed = true;
-						
+
 						player.updateStats.scoreUp(new SmallSpecialObstacle());
 						player.updateStats.ammoUp();
-						
-					}	
+
+					}
 				}
 
 				//check whether any bullets are out of the screen
@@ -775,7 +775,7 @@
 			if(!game.paused)
 				requestAnimationFrame(animate);
 		};
-		
+
 
 		window.addEventListener('keydown', function(e) {
 			// alert(e.keyCode);
@@ -786,4 +786,3 @@
 	</script>
 </body>
 </html>
-
