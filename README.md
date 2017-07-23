@@ -14,3 +14,5 @@ The objective of the game is to control a ball (your player) and shoot falling b
 
 3) Run index.html in a web browser, either using a web server or by simply opening the file.
 
+![Screenshot of Instructions](images/screenshots/instructions.png)
+![Screenshot of Gameplay](images/screenshots/gameplay.png)
